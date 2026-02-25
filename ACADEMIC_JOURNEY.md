@@ -1,11 +1,11 @@
-# Academic Journey — LeomultiCloud
-**TU Dublin | Final Year Project | Leonardo Bagno | 2026**
+# Academic Journey - Leo - MultiCloud Disaster Recovery
+**TU Dublin | Leonardo Bagno | 2026**
 
 ---
 
 ## Why This Project Exists
 
-My professional background is in data center operations. In physical infrastructure, redundancy is never optional — servers, network links, and power supplies are always provisioned with backup. The failure of a single component should never bring down a service.
+My professional background is in data center operations. In physical infrastructure, redundancy is never optional. Therefore, servers, network links, and power supplies are always provisioned with backup. The failure of a single component should never bring down a service.
 
 The **AWS us-east-1 outage in December 2021** changed how I looked at cloud architecture. Major services went down for hours. Organisations that depended on a single cloud provider had exactly the same problem that data center best practices solve on day one: a **single point of failure**.
 
