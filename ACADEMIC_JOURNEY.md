@@ -40,17 +40,15 @@ Measured Terraform provisioning time (300–360 seconds) and demonstrated a 75�
 
 | Metric | Tong (2023) | Kopparthi (2024) | Nelson et al. (2025) | **This Project** |
 |---|---|---|---|---|
-| RTO measured | ✅ Yes | ⚠️ Partial | ❌ Defined only | ✅ **Yes** |
-| RPO measured | ❌ No | ❌ Theoretical | ❌ Defined only | ✅ **Yes** |
-| TTL as variable | ❌ No | ❌ No | ❌ No | ✅ **Yes** |
-| Failback tested | ❌ No | ❌ No | ❌ No | ✅ **Yes** |
-| Reproducible | ⚠️ Partial | ❌ No | ❌ No | ✅ **Yes** |
-
-Each ✅ in this project's row that does not exist in previous papers is an **original academic contribution**.
+| RTO measured |  Yes |  Partial |  Defined only |  **Yes** |
+| RPO measured |  No |  Theoretical |  Defined only |  **Yes** |
+| TTL as variable |  No |  No |  No |  **Yes** |
+| Failback tested |  No |  No |  No |  **Yes** |
+| Reproducible |  Partial |  No |  No |  **Yes** |
 
 ---
 
-## What This Project Attacks
+## What This Project Proposes
 
 ### Problem 1 — Single cloud dependency
 **Literature:** Nelson et al. (2025) documented provider-level failures affecting organisations with no cross-cloud redundancy.  
@@ -74,33 +72,7 @@ Each ✅ in this project's row that does not exist in previous papers is an **or
 
 ---
 
-## The Research Questions
-
-| RQ | Question | Addressed by |
-|---|---|---|
-| RQ1 | How effective is Route 53 DNS failover for multi-cloud DR? | Tests 1 + 2 |
-| RQ2 | Does Terraform IaC reduce DR provisioning time? | Test 4 |
-| RQ3 | What RTO and RPO are achievable with Warm Standby? | Tests 1 + 3 |
-| RQ4 | Is the architecture viable and reproducible? | All tests |
-
----
-
-## Stack
-
-| Layer | Technology | Why |
-|---|---|---|
-| Application | Flask (Python) | Stateless — RPO = 0 by design |
-| Container | Docker | Environment parity AWS ↔ Azure |
-| Registry | Docker Hub | Single image pulled by both clouds |
-| Primary cloud | AWS EC2 + ALB | Native Route 53 + ALB health check integration |
-| Secondary cloud | Azure VM + App Gateway | Provider diversity — eliminates single point of failure |
-| DNS Failover | AWS Route 53 | Provider-agnostic failover trigger |
-| IaC | Terraform | Single codebase for both clouds |
-| DR Strategy | Warm Standby | Azure always running — RTO in minutes, not hours |
-
----
-
-*"The architecture I designed directly addresses these three gaps in the literature: it uses two distinct clouds to eliminate the single point of failure, uses Terraform to eliminate manual intervention, and measures RTO, RPO, and TTL simultaneously in a reproducible environment with a budget under €15."*
+*"The architecture I am designing directly addresses these three gaps in the literature: it uses two distinct clouds to eliminate the single point of failure, uses Terraform to eliminate manual intervention, and measures RTO, RPO, and TTL simultaneously in a reproducible environment with a budget under €15."*
 
 ---
 
