@@ -112,7 +112,7 @@ def index():
             </head>
             <body>
                 <div class="card">
-                   <div class="cloud-provider">{CLOUD_PROVIDER}</div>                    <h1>Welcome to the Flask Weather App!</h1>                                                                  <p>Running on <span class="cloud-provider">{CLOUD_PROVIDER}</span> cloud environment.</p>
+                   <div class="cloud-provider">{CLOUD_PROVIDER}</div>    <h1>Welcome to the Flask Weather App!</h1>                                                                  <p>Running on <span class="cloud-provider">{CLOUD_PROVIDER}</span> cloud environment.</p>
                     <p>Multi-Cloud DR - TU Dublin | Leonardo Bagno</p>
                     <p style="color: #94a3b8; font-size: 12px;">Version: {APP_VERSION} | Host: {socket.gethostname()}</p>
                 </div>
