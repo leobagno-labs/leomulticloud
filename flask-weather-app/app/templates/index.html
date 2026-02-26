@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weather App - {{ cloud_provider }}</title>
+    <style>
+      body {
+        font-family: monospace;
+        background-color: #0f172a;
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+      }
+      .card {
+        background-color: #1e293b;
+        padding: 32px 36px;
+        border-radius: 12px;
+        text-align: center;
+        border: 2px solid var(--accent);
+        width: 100%;
+        max-width: 760px;
+        box-sizing: border-box;
+      }
+      .cloud-provider {
+        font-size: 44px;
+        color: var(--accent);
+        font-weight: 900;
+        margin: 0 0 8px 0;
+      }
+      h1 {
+        margin: 10px 0 18px 0;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .muted {
+        color: #94a3b8;
+        font-size: 12px;
+        margin-top: 16px;
+      }
+      form {
+        margin: 18px auto 14px auto;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      input[type="text"] {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #0b1220;
+        color: #e2e8f0;
+        min-width: 240px;
+        outline: none;
+      }
+      button {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var (--accent);
+        background: transparent;
+        color: #e2e8f0;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .result {
+        margin-top: 16px;
+        text-align: left;
+        background: #0b1220;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 14px 16px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px dashed #243246;
+      }
+      .row:last-child {
+        border-bottom: none;
+      }
+      .label {
+        color: #94a3b8;
+      }
+      .error {
+        margin-top: 14px;
+        background: #2a1320;
+        border: 1px solid #7f1d1d;
+        color: #fecaca;
+        border-radius: 10px;
+        padding: 12px 14px;
+        text-align: left;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 12px;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" style="--accent: {{ color }};">
+      <div class="cloud-provider">{{ cloud_provider }}</div>
+      <h1>Welcome to Leonardo's Weather App!</h1>
+
+      <p>
+        Running on <span class="badge">{{ cloud_provider }}</span> cloud environment.
+      </p>
+      <p>Multi-Cloud DR - TU Dublin | Leonardo Bagno</p>
+
+      <form method="POST" action="/">
+        <input type="text" name="city" value="{{ city }}" placeholder="Type a city (e.g., Dublin)" />
+        <button type="submit">Get Weather</button>
+      </form>
+
+      {% if error %}
+        <div class="error">
+          <strong>Error:</strong> {{ error }}
+        </div>
+      {% endif %}
+
+      {% if weather %}
+        <div class="result">
+          <div class="row"><span class="label">City</span><span>{{ weather.city }}</span></div>
+          <div class="row"><span class="label">Temperature</span><span>{{ weather.temperature }} °C</span></div>
+          <div class="row"><span class="label">Feels like</span><span>{{ weather.feels_like }} °C</span></div>
+          <div class="row"><span class="label">Humidity</span><span>{{ weather.humidity }} %</span></div>
+          <div class="row"><span class="label">Description</span><span>{{ weather.description }}</span></div>
+          <div class="row"><span class="label">Time (UTC)</span><span>{{ weather.time }}</span></div>
+        </div>
+      {% endif %}
+
+      <p class="muted">Version: {{ version }} | Host: {{ hostname }}</p>
+    </div>
+  </body>
+</html>
