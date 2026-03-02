@@ -1,81 +1,101 @@
-# Academic Journey - Leo - MultiCloud Disaster Recovery
-**TU Dublin | Leonardo Bagno | 2026**
+# Academic Journey — Leo — Multi-Cloud Disaster Recovery
+
+## TU Dublin | Leonardo Bagno | Academic Year 2026
 
 ---
 
 ## Why This Project Exists
 
-My professional background is in data center operations. In physical infrastructure, redundancy is never optional. Therefore, servers, network links, and power supplies are always provisioned with backup. The failure of a single component should never bring down a service.
+My professional background is in data center operations. In physical infrastructure, redundancy is never optional: power, network links, and critical components are always provisioned with backups, and a single failure should not bring down a service.
 
-The **AWS us-east-1 outage in December 2021** changed how I looked at cloud architecture. Major services went down for hours. Organisations that depended on a single cloud provider had exactly the same problem that data center best practices solve on day one: a **single point of failure**.
+Cloud platforms are highly redundant, but real incidents still demonstrate that a regional disruption can degrade multiple services at once. This project treats those incidents as motivation (background) and focuses on what can be objectively measured in a controlled experiment: **DNS-based failover behaviour**, **TTL impact**, and **recovery performance** in a **multi-cloud active–passive design**. :contentReference[oaicite:1]{index=1}
 
-That observation raised a natural question:
-
-> *"If we implement redundancy by default in physical infrastructure, why are organisations still running single-cloud architectures in the cloud?"*
-
-This project answers that question — by building, deploying, and empirically measuring a multi-cloud disaster recovery architecture using **AWS as primary** and **Azure as secondary**, with automated DNS failover via **Route 53**.
+This project designs, implements, and empirically evaluates a **multi-cloud disaster recovery architecture** using **AWS as primary** and **Azure as secondary**, with automated DNS failover using **Route 53 health checks** and a controlled test methodology.
 
 ---
 
-## What the Literature Found
+## What This Project Actually Builds (Current Scenario)
 
-### The Problem — Nelson et al. (2025)
-Between 2017 and 2023, AWS recorded **five major outages** affecting multiple regions simultaneously. The study concluded that single-cloud architectures — regardless of internal redundancy — remain vulnerable to provider-level failures.
+### Deployment model (simplified for reproducible measurement)
 
-> Nelson, J., Patel, R., & Thompson, K. (2025). Cloud Service Reliability and Disaster Recovery in Enterprise Environments. *Journal of Cloud Computing*, 14(2), 1–18.
+- **No Docker** (to reduce extra runtime layers and measurement noise)
+- **Ubuntu 22.04 VM on AWS + Ubuntu 22.04 VM on Azure**
+- **Flask app served by Gunicorn**
+- **Nginx reverse proxy** in front of Gunicorn
+- **systemd** manages the Gunicorn service (auto-start and restart)
+- **/health endpoint** exposed via Nginx for Route 53 health checks
+- The application identifies **which cloud is serving the request** (AWS or Azure)
 
-### The Gap — Kopparthi (2024)
-Only **32% of organisations** achieve RTO under 2 hours with single-cloud Warm Standby architectures. The remaining 68% depend on manual processes that significantly increase recovery time. Automation via IaC was identified as the key missing element.
+### Provisioning & symmetry
 
-> Kopparthi, S. (2024). Multi-Cloud Disaster Recovery: Strategies and Implementation. *International Journal of Cloud Computing and Services Science*, 13(1), 45–62.
+-### Provisioning & symmetry
 
-### The Closest Work — Tong (2023)
-Measured Terraform provisioning time (300–360 seconds) and demonstrated a 75–85% reduction in RTO compared to manual provisioning. However, Tong simulated DR by **destroying the entire infrastructure** — a worst-case scenario that does not represent a realistic application failure. No measurement of RPO, TTL variation, or failback was performed.
-
-> Tong, W. (2023). Automated Cloud Infrastructure Provisioning for Disaster Recovery Using Terraform. *IEEE International Conference on Cloud Engineering*, 112–119.
-
----
-
-## What No Paper Has Done — The Gap This Project Fills
-
-| Metric | Tong (2023) | Kopparthi (2024) | Nelson et al. (2025) | **This Project** |
-|---|---|---|---|---|
-| RTO measured |  Yes |  Partial |  Defined only |  **Yes** |
-| RPO measured |  No |  Theoretical |  Defined only |  **Yes** |
-| TTL as variable |  No |  No |  No |  **Yes** |
-| Failback tested |  No |  No |  No |  **Yes** |
-| Reproducible |  Partial |  No |  No |  **Yes** |
+- Deployment is automated via a cloud-init cloud-config (user-data) file executed at first boot on both AWS EC2 and Azure VM, which installs and configures Nginx + Gunicorn + systemd and validates the `/health` endpoint.
+- Infrastructure is created with Terraform and structured to keep AWS/Azure stacks as equivalent as practical.
+- Global DNS failover is implemented with Route 53 failover routing policy + health checks.
 
 ---
 
-## What This Project Proposes
+## Research Focus (What I Measure)
 
-### Problem 1 — Single cloud dependency
-**Literature:** Nelson et al. (2025) documented provider-level failures affecting organisations with no cross-cloud redundancy.  
-**This project:** Deploys identical application stacks on AWS (primary) and Azure (secondary). Route 53 automatically redirects traffic when the primary fails — no manual intervention.
+This project is not “multi-cloud is better” as a broad claim. The focus is **measurable behaviour** of DNS-based disaster recovery in a reproducible multi-cloud environment:
 
-### Problem 2 — Manual DR processes with high RTO
-**Literature:** Kopparthi (2024) found 68% of organisations cannot achieve RTO < 2 hours due to manual recovery processes.  
-**This project:** Entire infrastructure provisioned by a single `terraform apply` command. RQ2 measures whether Tong's 300–360 second benchmark is reproducible in a real AWS+Azure environment.
+1) **RTO (Recovery Time Objective) / Failover Time**
+   - Measured from “primary becomes unhealthy” to “clients consistently receive responses from secondary”.
+   - Includes detection and DNS caching/propagation effects. :contentReference[oaicite:3]{index=3}
 
-### Problem 3 — No simultaneous RTO + RPO measurement
-**Literature:** No reviewed paper measured both metrics simultaneously in a real multi-cloud environment.  
-**This project:** Measures RTO (failover time) and RPO (data loss) simultaneously during the same test run. The stateless Flask application guarantees RPO = 0 by design — no database, no sessions, no state to lose.
+2) **TTL as a controlled variable**
+   - Failover is tested with **TTL = 60s, 120s, 300s** (all other variables held constant).
+   - This isolates how caching behaviour contributes to total recovery duration. :contentReference[oaicite:4]{index=4}
 
-### Problem 4 — TTL never isolated as a variable
-**Literature:** Tong (2023) mentions TTL briefly but never varies it systematically.  
-**This project:** Tests failover with TTL = 60s, 120s, and 300s — keeping all other variables constant. This is the most methodologically original contribution of the project.
+3) **RPO (Recovery Point Objective)**
+   - The Flask app is **stateless by design**, therefore **RPO = 0** (no database, no sessions, no persistent writes).
+   - This is justified as a valid DR workload model: there is no state to lose. :contentReference[oaicite:5]{index=5}
 
-### Problem 5 — Failback never measured
-**Literature:** No reviewed paper measured the time to return to the primary cloud after DR.  
-**This project:** Measures failback time (Azure → AWS) as a distinct test, adding a dimension absent from all reviewed literature.
+4) **Failback**
+   - Time to return traffic from Azure → AWS after recovery is measured as a distinct experiment.
 
 ---
 
-*"The architecture I am designing directly addresses these three gaps in the literature: it uses two distinct clouds to eliminate the single point of failure, uses Terraform to eliminate manual intervention, and measures RTO, RPO, and TTL simultaneously in a reproducible environment with a budget under €15."*
+## Literature Alignment (What the Literature Supports / What I Add)
+
+The literature supports:
+
+- Multi-cloud disaster recovery strategies and HA design patterns (Li et al., 2025).
+- Terraform for multi-cloud provisioning and reproducibility (Ghosh et al., 2024; Manolov et al., 2024).
+- Empirical measurement of RTO/RPO in DR contexts, but usually without isolating DNS behaviour (Suyatno et al., 2025; Vironica et al., 2025).
+- DNS TTL behaviour is not always “standard” across resolvers, which affects caching/propagation (Shavitt and Shreibstein, 2025).
+
+What this project adds (in a controlled and reproducible way):
+
+- **DNS TTL isolated as an experimental variable** (60/120/300) during multi-cloud failover testing.
+- **Joint reporting** of RTO + TTL impact + failback timing, within one consistent architecture and test suite. :contentReference[oaicite:6]{index=6}
 
 ---
 
-**Project repository:** [github.com/your-username/leomulticloud](https://github.com/your-username/leomulticloud)  
-**Status:** Phase 1 complete — Flask app running locally  
+## What I Will Deliver
+
+- A documented multi-cloud DR architecture (AWS primary + Azure secondary)
+- Terraform codebase (reproducible provisioning)
+- A bootstrap script (cloud-init user_data) that deploys:
+  - Flask + Gunicorn + Nginx
+  - systemd service unit
+  - `/health` endpoint validation
+- A set of tests that record:
+  - failover time (RTO)
+  - TTL impact across 60/120/300
+  - RPO justification (stateless = 0)
+  - failback time
+- A final report that evaluates results against the research questions and limitations of DNS-based DR. :contentReference[oaicite:7]{index=7}
+
+---
+
+## Key Insight (One Sentence)
+
+This project empirically evaluates DNS-based multi-cloud disaster recovery by isolating TTL as a variable and measuring failover/failback behaviour in a reproducible Terraform-managed AWS + Azure environment, while using a stateless workload model (RPO = 0 by design). :contentReference[oaicite:8]{index=8}
+
+---
+
+**Repository:** github.com/your-username/leomulticloud  
+**Status:** App working locally + deployment artefacts being implemented (user_data, systemd unit, nginx config, Terraform)  
 **Target completion:** April 17, 2026
