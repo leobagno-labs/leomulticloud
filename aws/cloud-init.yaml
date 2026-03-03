@@ -1,0 +1,82 @@
+#cloud-config
+
+package_update: true
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+  - nginx
+  - git
+  - curl
+
+write_files:
+  - path: /etc/flask-weather-app.env
+    permissions: '0600'
+    content: |
+      CLOUD_PROVIDER=${cloud_provider}
+      APP_VERSION=1.0.0
+      WEATHER_API_KEY=
+      APP_PORT=5000
+
+  - path: /etc/systemd/system/flask-weather-app.service
+    content: |
+      [Unit]
+      Description=Flask Weather App (Gunicorn)
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      Type=simple
+      User=ubuntu
+      Group=ubuntu
+      WorkingDirectory=/opt/leomulticloud/flask-weather-app/app
+      EnvironmentFile=/etc/flask-weather-app.env
+      ExecStart=/opt/leomulticloud/flask-weather-app/venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 2 app:app
+      Restart=always
+      RestartSec=2
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/nginx/nginx.conf
+    content: |
+      events {}
+
+      http {
+        server {
+          listen 80;
+          server_name _;
+
+          location /health {
+            proxy_pass http://127.0.0.1:5000/health;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_read_timeout 5s;
+          }
+
+          location / {
+            proxy_pass http://127.0.0.1:5000/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_read_timeout 30s;
+          }
+        }
+      }
+
+runcmd:
+  - rm -rf /opt/leomulticloud
+  - git clone https://github.com/leobagno-labs/leomulticloud.git /opt/leomulticloud
+  - python3 -m venv /opt/leomulticloud/flask-weather-app/venv
+  - /opt/leomulticloud/flask-weather-app/venv/bin/pip install --upgrade pip
+  - /opt/leomulticloud/flask-weather-app/venv/bin/pip install -r /opt/leomulticloud/flask-weather-app/requirements.txt
+  - systemctl daemon-reload
+  - systemctl enable flask-weather-app
+  - systemctl restart flask-weather-app
+  - nginx -t
+  - systemctl enable nginx
+  - systemctl restart nginx
+  - sleep 3
+  - curl -sf http://127.0.0.1/health || echo "health via nginx FAILED"
+  - curl -sf http://127.0.0.1:5000/health || echo "health direct FAILED"
