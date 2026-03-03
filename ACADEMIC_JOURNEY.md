@@ -8,7 +8,7 @@
 
 My professional background is in data center operations. In physical infrastructure, redundancy is never optional: power, network links, and critical components are always provisioned with backups, and a single failure should not bring down a service.
 
-Cloud platforms are highly redundant, but real incidents still demonstrate that a regional disruption can degrade multiple services at once. This project treats those incidents as motivation (background) and focuses on what can be objectively measured in a controlled experiment: **DNS-based failover behaviour**, **TTL impact**, and **recovery performance** in a **multi-cloud active–passive design**. :contentReference[oaicite:1]{index=1}
+Cloud platforms are highly redundant, but real incidents still demonstrate that a regional disruption can degrade multiple services at once. This project treats those incidents as motivation (background) and focuses on what can be objectively measured in a controlled experiment: **DNS-based failover behaviour**, **TTL impact**, and **recovery performance** in a **multi-cloud active–passive design**. 
 
 This project designs, implements, and empirically evaluates a **multi-cloud disaster recovery architecture** using **AWS as primary** and **Azure as secondary**, with automated DNS failover using **Route 53 health checks** and a controlled test methodology.
 
@@ -42,15 +42,15 @@ This project is not “multi-cloud is better” as a broad claim. The focus is *
 
 1) **RTO (Recovery Time Objective) / Failover Time**
    - Measured from “primary becomes unhealthy” to “clients consistently receive responses from secondary”.
-   - Includes detection and DNS caching/propagation effects. :contentReference[oaicite:3]{index=3}
+   - Includes detection and DNS caching/propagation effects. 
 
 2) **TTL as a controlled variable**
    - Failover is tested with **TTL = 60s, 120s, 300s** (all other variables held constant).
-   - This isolates how caching behaviour contributes to total recovery duration. :contentReference[oaicite:4]{index=4}
+   - This isolates how caching behaviour contributes to total recovery duration. 
 
 3) **RPO (Recovery Point Objective)**
    - The Flask app is **stateless by design**, therefore **RPO = 0** (no database, no sessions, no persistent writes).
-   - This is justified as a valid DR workload model: there is no state to lose. :contentReference[oaicite:5]{index=5}
+   - This is justified as a valid DR workload model: there is no state to lose. 
 
 4) **Failback**
    - Time to return traffic from Azure → AWS after recovery is measured as a distinct experiment.
@@ -69,7 +69,7 @@ The literature supports:
 What this project adds (in a controlled and reproducible way):
 
 - **DNS TTL isolated as an experimental variable** (60/120/300) during multi-cloud failover testing.
-- **Joint reporting** of RTO + TTL impact + failback timing, within one consistent architecture and test suite. :contentReference[oaicite:6]{index=6}
+- **Joint reporting** of RTO + TTL impact + failback timing, within one consistent architecture and test suite. 
 
 ---
 
@@ -86,13 +86,13 @@ What this project adds (in a controlled and reproducible way):
   - TTL impact across 60/120/300
   - RPO justification (stateless = 0)
   - failback time
-- A final report that evaluates results against the research questions and limitations of DNS-based DR. :contentReference[oaicite:7]{index=7}
+- A final report that evaluates results against the research questions and limitations of DNS-based DR. 
 
 ---
 
 ## Key Insight (One Sentence)
 
-This project empirically evaluates DNS-based multi-cloud disaster recovery by isolating TTL as a variable and measuring failover/failback behaviour in a reproducible Terraform-managed AWS + Azure environment, while using a stateless workload model (RPO = 0 by design). :contentReference[oaicite:8]{index=8}
+This project empirically evaluates DNS-based multi-cloud disaster recovery by isolating TTL as a variable and measuring failover/failback behaviour in a reproducible Terraform-managed AWS + Azure environment, while using a stateless workload model (RPO = 0 by design). 
 
 ---
 
