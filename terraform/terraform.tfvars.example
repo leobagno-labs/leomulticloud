@@ -1,0 +1,21 @@
+# terraform.tfvars is gitignored 
+
+aws_region    = "eu-west-1"
+azure_region  = "North Europe"
+
+instance_type = "t3.micro"
+azure_vm_size = "Standard_B1s"
+
+app_port      = 5000
+
+repo_url      = "https://github.com/your-username/leomulticloud"
+deploy_commit = "main"
+
+weather_api_key = ""   # Leave empty to use mock data
+
+ssh_public_key = "ssh-rsa AAAA..."
+
+domain_name = "example.com"
+
+# Experiment variable — change to 60, 120, or 300 for each TTL test run
+dns_ttl = 60

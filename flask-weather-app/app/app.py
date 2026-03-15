@@ -2,6 +2,7 @@ import os
 import socket
 import datetime
 import requests
+import psutil
 from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
@@ -11,6 +12,8 @@ APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY", "")
 APP_PORT = int(os.environ.get("APP_PORT", 5000))
 
+CPU_OVERLOAD_THRESHOLD = int(os.environ.get("CPU_OVERLOAD_THRESHOLD", 90))
+
 PROVIDER_COLORS = {
     "AWS": "#f59e0b",
     "Azure": "#3b82f6",
@@ -19,6 +22,21 @@ PROVIDER_COLORS = {
 
 @app.route("/health")
 def health():
+    cpu = psutil.cpu_percent(interval=0.5)
+    if cpu >= CPU_OVERLOAD_THRESHOLD:
+        return (
+            jsonify(
+                {
+                    "status": "overloaded",
+                    "cloud_provider": CLOUD_PROVIDER,
+                    "app_version": APP_VERSION,
+                    "hostname": socket.gethostname(),
+                    "cpu_percent": cpu,
+                    "timestamp": _now(),
+                }
+            ),
+            503,
+        )
     return (
         jsonify(
             {
@@ -26,6 +44,7 @@ def health():
                 "cloud_provider": CLOUD_PROVIDER,
                 "app_version": APP_VERSION,
                 "hostname": socket.gethostname(),
+                "cpu_percent": cpu,
                 "timestamp": _now(),
             }
         ),
