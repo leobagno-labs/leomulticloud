@@ -1,0 +1,166 @@
+#cloud-config
+
+package_update: true
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+  - nginx
+  - git
+  - curl
+ 
+write_files:
+  # ── Environment file ────────────────────────────────────────────────────────
+  - path: /etc/flask-weather-app.env
+    permissions: '0600'
+    content: |
+      CLOUD_PROVIDER=${cloud_provider}
+      APP_VERSION=1.0.0
+      WEATHER_API_KEY=${weather_api_key}
+      APP_PORT=${app_port}
+ 
+  # ── Systemd service unit ────────────────────────────────────────────────────
+  # FIX: User/Group now use ${app_user} (Terraform var) instead of hardcoded
+  #      "ubuntu" — required for Azure which uses "azureuser"
+  # FIX: $${APP_PORT} is escaped so Terraform doesn't consume it;
+  #      Bash will resolve it at runtime from the EnvironmentFile
+  - path: /etc/systemd/system/flask-weather-app.service
+    content: |
+      [Unit]
+      Description=Flask Weather App (Gunicorn)
+      Wants=network-online.target
+      After=network-online.target
+ 
+      [Service]
+      Type=simple
+      User=${app_user}
+      Group=${app_user}
+      WorkingDirectory=/opt/leomulticloud/flask-weather-app/app
+      EnvironmentFile=/etc/flask-weather-app.env
+      ExecStart=/opt/leomulticloud/flask-weather-app/venv/bin/gunicorn \
+        --bind 127.0.0.1:$${APP_PORT} \
+        --workers 2 \
+        app:app
+      Restart=always
+      RestartSec=2
+ 
+      [Install]
+      WantedBy=multi-user.target
+ 
+  # ── Nginx site config ───────────────────────────────────────────────────────
+  # FIX: $${host}, $${remote_addr}, $${proxy_add_x_forwarded_for} are all
+  #      escaped — Nginx variables, not Terraform variables
+  # FIX: Port is injected by Terraform as ${app_port} at template render time
+  #      so the rendered file has a literal port number (no runtime env lookup)
+  - path: /etc/nginx/sites-available/flask-weather-app.conf
+    content: |
+      server {
+        listen 80;
+        server_name _;
+ 
+        location /health {
+          proxy_pass http://127.0.0.1:${app_port}/health;
+          proxy_set_header Host $${host};
+          proxy_set_header X-Real-IP $${remote_addr};
+          proxy_set_header X-Forwarded-For $${proxy_add_x_forwarded_for};
+          proxy_read_timeout 5s;
+        }
+ 
+        location / {
+          proxy_pass http://127.0.0.1:${app_port}/;
+          proxy_set_header Host $${host};
+          proxy_set_header X-Real-IP $${remote_addr};
+          proxy_set_header X-Forwarded-For $${proxy_add_x_forwarded_for};
+          proxy_read_timeout 30s;
+        }
+      }
+ 
+  # ── Deploy script ───────────────────────────────────────────────────────────
+  # FIX: All Bash variables use $${} (double dollar) so Terraform leaves them
+  #      alone and Bash resolves them at runtime
+  # FIX: REPO_URL and PINNED_REF are injected by Terraform at render time
+  #      so they become literal strings in the rendered script — no runtime
+  #      env var dependency
+  # FIX: APP_USER injected by Terraform for correct chown on both AWS/Azure
+  # NEW: chown step added so the service user owns the app directory
+  # NEW: venv directory guard before pip install
+  - path: /opt/deploy.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+ 
+      # Injected by Terraform at render time — these are literal values
+      REPO_URL="${repo_url}"
+      PINNED_REF="${deploy_commit}"
+      APP_USER="${app_user}"
+ 
+      # Pure Bash variables — resolved at runtime
+      DEPLOY_DIR="/opt/leomulticloud"
+      APP_DIR="$${DEPLOY_DIR}/flask-weather-app"
+      MAX_RETRIES=3
+ 
+      log() { echo "[deploy] $$(date -u +%FT%TZ) $$*"; }
+ 
+      # --- Clone or fetch (idempotent) ---
+      if [ -d "$${DEPLOY_DIR}/.git" ]; then
+        log "Repo exists — fetching updates"
+        git -C "$${DEPLOY_DIR}" fetch origin
+      else
+        log "Cloning repo (up to $${MAX_RETRIES} attempts)"
+        for i in $$(seq 1 $${MAX_RETRIES}); do
+          git clone "$${REPO_URL}" "$${DEPLOY_DIR}" && break
+          log "Clone attempt $${i}/$${MAX_RETRIES} failed — retrying in $${i}s"
+          sleep "$${i}"
+          [ "$${i}" -eq "$${MAX_RETRIES}" ] && { log "FATAL: clone failed after $${MAX_RETRIES} attempts"; exit 1; }
+        done
+      fi
+ 
+      # --- Pin to exact ref ---
+      log "Checking out ref: $${PINNED_REF}"
+      git -C "$${DEPLOY_DIR}" checkout "$${PINNED_REF}" --
+      git -C "$${DEPLOY_DIR}" log --oneline -1
+ 
+      # --- Fix ownership (critical for non-root service user) ---
+      log "Setting ownership to $${APP_USER}"
+      chown -R "$${APP_USER}:$${APP_USER}" "$${DEPLOY_DIR}"
+ 
+      # --- Python venv & deps ---
+      log "Setting up virtualenv"
+      if [ ! -d "$${APP_DIR}/venv" ]; then
+        python3 -m venv "$${APP_DIR}/venv"
+      fi
+      "$${APP_DIR}/venv/bin/pip" install --upgrade pip -q
+      if [ ! -f "$${APP_DIR}/requirements.txt" ]; then
+        log "FATAL: requirements.txt not found at $${APP_DIR}/requirements.txt"
+        exit 1
+      fi
+      "$${APP_DIR}/venv/bin/pip" install -r "$${APP_DIR}/requirements.txt" -q
+ 
+      # --- Systemd ---
+      systemctl daemon-reload
+      systemctl enable flask-weather-app
+      systemctl restart flask-weather-app
+ 
+      # --- Nginx ---
+      mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+      ln -sf /etc/nginx/sites-available/flask-weather-app.conf \
+             /etc/nginx/sites-enabled/flask-weather-app.conf
+      rm -f /etc/nginx/sites-enabled/default
+      grep -q 'sites-enabled' /etc/nginx/nginx.conf || \
+        sed -i '/http\s*{/a \    include /etc/nginx/sites-enabled/*.conf;' /etc/nginx/nginx.conf
+      nginx -t
+      systemctl enable nginx
+      systemctl restart nginx
+ 
+      # --- Health checks ---
+      sleep 5
+      log "Health check via nginx (port 80)"
+      curl -sf http://127.0.0.1/health || { log "ERROR: nginx health check FAILED"; exit 1; }
+      log "Health check direct (app port)"
+      curl -sf http://127.0.0.1:${app_port}/health || { log "ERROR: direct health check FAILED"; exit 1; }
+ 
+      log "Deploy complete — $${PINNED_REF} is live"
+ 
+runcmd:
+  - /opt/deploy.sh
