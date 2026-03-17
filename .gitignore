@@ -49,3 +49,4 @@ Thumbs.db
 # =========================
 *.zip
 venv/
+tests/results/
