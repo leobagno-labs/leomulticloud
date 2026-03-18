@@ -16,7 +16,8 @@ SHELL         := /bin/bash   # required for pipefail, time builtin, $$(...)
 
 TF            := terraform -chdir=terraform
 LOG_DIR       := logs
-TTL           ?= 60          # override: make apply TTL=120
+# Override TTL per run: make apply TTL=120  (must be 60, 120, or 300)
+TTL           ?= 60
 
 .PHONY: init plan apply destroy outputs health ssh-aws experiment help
 
