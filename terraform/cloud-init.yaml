@@ -100,7 +100,7 @@ write_files:
       APP_DIR="$${DEPLOY_DIR}/flask-weather-app"
       MAX_RETRIES=3
  
-      log() { echo "[deploy] $$(date -u +%FT%TZ) $$*"; }
+      log() { echo "[deploy] $(date -u +%FT%TZ) $*"; }
  
       # --- Clone or fetch (idempotent) ---
       if [ -d "$${DEPLOY_DIR}/.git" ]; then
@@ -108,7 +108,7 @@ write_files:
         git -C "$${DEPLOY_DIR}" fetch origin
       else
         log "Cloning repo (up to $${MAX_RETRIES} attempts)"
-        for i in $$(seq 1 $${MAX_RETRIES}); do
+        for i in $(seq 1 $${MAX_RETRIES}); do
           git clone "$${REPO_URL}" "$${DEPLOY_DIR}" && break
           log "Clone attempt $${i}/$${MAX_RETRIES} failed — retrying in $${i}s"
           sleep "$${i}"
