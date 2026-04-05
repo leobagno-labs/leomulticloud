@@ -19,7 +19,7 @@ variable "instance_type" {
 variable "azure_vm_size" {
   description = "Azure VM size"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_D2as_v7"
 }
 
 variable "app_port" {
