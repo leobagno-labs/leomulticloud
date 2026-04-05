@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-NS="8.8.8.8"
+NS="ns-523.awsdns-01.net"
 HOST="leomulticloud.click"
 SECONDARY_IP="20.107.192.8"
 TTL="${DNS_TTL:-60}"
