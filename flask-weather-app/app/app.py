@@ -22,7 +22,7 @@ PROVIDER_COLORS = {
 
 @app.route("/health")
 def health():
-    cpu = psutil.cpu_percent(interval=0.5)
+    cpu = psutil.cpu_percent(interval=0.1)
     if cpu >= CPU_OVERLOAD_THRESHOLD:
         return (
             jsonify(

@@ -19,7 +19,7 @@ variable "instance_type" {
 variable "azure_vm_size" {
   description = "Azure VM size"
   type        = string
-  default     = "Standard_D2as_v7"
+  default     = "Standard_B1s"
 }
 
 variable "app_port" {
@@ -51,6 +51,12 @@ variable "ssh_public_key" {
   type        = string
 }
 
+variable "project_name" {
+  description = "Project name used for resource tagging"
+  type        = string
+  default     = "leomulticloud"
+}
+
 variable "domain_name" {
   description = "Route 53 hosted zone domain (e.g. example.com)"
   type        = string
@@ -68,3 +74,4 @@ variable "dns_ttl" {
     error_message = "dns_ttl must be one of the experimental values: 60, 120, or 300."
   }
 }
+
