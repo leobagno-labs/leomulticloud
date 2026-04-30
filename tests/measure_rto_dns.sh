@@ -4,11 +4,11 @@
 
 set -euo pipefail
 
-NS="ns-523.awsdns-01.net"
+NS="205.251.194.11"
 HOST="leomulticloud.click"
-SECONDARY_IP="20.107.192.8"
+SECONDARY_IP="54.78.181.255"
 TTL="${DNS_TTL:-60}"
-POLL=5
+POLL=1
 
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT="$(dirname "$0")/results/rto_dns_ttl${TTL}_${RUN_ID}.csv"

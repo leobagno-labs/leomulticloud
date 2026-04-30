@@ -1,0 +1,16 @@
+dns_host,poll_time_utc,elapsed_ms,resolved_ip,failover_detected
+leomulticloud.click,22:46:14,3,34.254.44.60,0
+leomulticloud.click,22:46:19,5078,34.254.44.60,0
+leomulticloud.click,22:46:24,10152,34.254.44.60,0
+leomulticloud.click,22:46:29,15218,34.254.44.60,0
+leomulticloud.click,22:46:34,20278,34.254.44.60,0
+leomulticloud.click,22:46:39,25356,34.254.44.60,0
+leomulticloud.click,22:46:44,30425,34.254.44.60,0
+leomulticloud.click,22:46:49,35504,34.254.44.60,0
+leomulticloud.click,22:46:54,40575,34.254.44.60,0
+leomulticloud.click,22:46:59,45654,20.107.192.8,0
+leomulticloud.click,22:47:05,50722,20.107.192.8,1
+leomulticloud.click,22:47:10,55801,20.107.192.8,1
+leomulticloud.click,22:47:15,60879,20.107.192.8,1
+leomulticloud.click,22:47:20,65947,20.107.192.8,1
+leomulticloud.click,22:47:25,71008,20.107.192.8,1
