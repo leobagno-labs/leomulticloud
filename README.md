@@ -220,7 +220,7 @@ If you use this work, please cite:
   title        = {Design and Evaluation of a Multi-Cloud Disaster Recovery Architecture},
   year         = {2026},
   institution  = {Technological University Dublin},
-  note         = {B.Sc. Cloud Architect Project, Programme H4036},
+  note         = {Cloud Architect Project, Programme H4036},
   url          = {https://github.com/leobagno-labs/leomulticloud}
 }
 ```
