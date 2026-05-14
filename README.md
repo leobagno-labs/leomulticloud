@@ -7,8 +7,8 @@
 
 **Design and Evaluation of a Multi-Cloud Disaster Recovery Architecture**
 
-B.Sc. Cloud Architect Project — TU Dublin, Programme H4036, Academic Year 2026  
-Author: Leonardo Bagno
+Cloud Architect Project — TU Dublin, Programme H4036, Academic Year 2026  
+Author: Leonardo Vernon Bagno Da Silva
 
 ---
 
