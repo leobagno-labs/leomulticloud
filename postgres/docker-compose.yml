@@ -1,0 +1,37 @@
+services:
+  pg-primary:
+    image: postgres:18
+    container_name: pg-primary
+    environment:
+      POSTGRES_USER: leo
+      POSTGRES_PASSWORD: leomulticloud
+      POSTGRES_DB: weatherdb
+    command: ["postgres", "-c", "wal_level=logical"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leo -d weatherdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  pg-standby:
+    image: postgres:18
+    container_name: pg-standby
+    environment:
+      POSTGRES_USER: leo
+      POSTGRES_PASSWORD: leomulticloud
+      POSTGRES_DB: weatherdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - standby_data:/var/lib/postgresql
+    depends_on:
+      pg-primary:
+        condition: service_healthy
+
+volumes:
+  primary_data:
+  standby_data:
