@@ -1,0 +1,15 @@
+dns_host,poll_time_utc,elapsed_ms,resolved_ip,failover_detected
+leomulticloud.internal,15:43:21,4,34.254.44.60,0
+leomulticloud.internal,15:43:26,5067,34.254.44.60,0
+leomulticloud.internal,15:43:31,10141,34.254.44.60,0
+leomulticloud.internal,15:43:36,15220,34.254.44.60,0
+leomulticloud.internal,15:43:42,20291,34.254.44.60,0
+leomulticloud.internal,15:43:47,25374,34.254.44.60,0
+leomulticloud.internal,15:43:52,30442,34.254.44.60,0
+leomulticloud.internal,15:43:57,35509,34.254.44.60,0
+leomulticloud.internal,15:44:02,40587,34.254.44.60,0
+leomulticloud.internal,15:44:07,45663,34.254.44.60,0
+leomulticloud.internal,15:44:12,50735,20.107.192.8,0
+leomulticloud.internal,15:44:17,55804,20.107.192.8,1
+leomulticloud.internal,15:44:22,60871,20.107.192.8,1
+leomulticloud.internal,15:44:27,65932,20.107.192.8,1
