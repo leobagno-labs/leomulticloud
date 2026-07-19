@@ -15,13 +15,14 @@ Usage:
 import csv
 import datetime
 import time
-
+import sys
 import psycopg
 
 PRIMARY_DSN = "host=localhost port=5432 user=leo password=leomulticloud dbname=weatherdb"
 STANDBY_DSN = "host=localhost port=5433 user=leo password=leomulticloud dbname=weatherdb"
 
-WRITE_INTERVAL = 0.1  # seconds between inserts (10 rows/second)
+RATE = float(sys.argv[1]) if len(sys.argv) > 1 else 10.0  # writes/second
+WRITE_INTERVAL = 1.0 / RATE
 STANDBY_WAIT = 5      # seconds to let the standby settle after primary death
 
 
@@ -31,7 +32,7 @@ def now_utc():
 
 def main():
     print("=== leomulticloud RPO measurement ===")
-    print("Writing to primary at 10 rows/second.")
+    print(f"Writing to primary at {RATE:g} rows/second.")
     print("Kill the primary when ready:  docker stop pg-primary")
     print("-" * 50)
 

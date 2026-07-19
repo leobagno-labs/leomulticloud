@@ -1,0 +1,2 @@
+run_timestamp,test_start,rows_written,primary_last_id,standby_last_id,rows_lost,seconds_lost
+20260719T091843,2026-07-19T09:18:18.484658+00:00,1526,4304,4304,0,0.0
